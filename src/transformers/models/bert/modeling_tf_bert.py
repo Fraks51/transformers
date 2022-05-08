@@ -851,7 +851,7 @@ class TFBertMainLayer(tf.keras.layers.Layer):
                 self.config.num_hidden_layers,
                 batch_size, self.config.num_attention_heads,
                 seq_length, seq_length])
-            print(head_mask.numpy())
+            print(tf.make_ndarray(head_mask))
         else:
             head_mask = [None] * self.config.num_hidden_layers
 
