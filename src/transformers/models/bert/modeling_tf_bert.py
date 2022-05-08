@@ -302,16 +302,19 @@ class TFBertSelfAttention(tf.keras.layers.Layer):
             # Apply the attention mask is (precomputed for all layers in TFBertModel call() function)
             attention_scores = tf.add(attention_scores, attention_mask)
 
+
+        # Mask heads if we want to
+        # if we multiply scores on zero
+        # and after softmax we have equal probabilities
+        if head_mask is not None:
+            attention_scores = tf.multiply(attention_scores, head_mask)
+
         # Normalize the attention scores to probabilities.
         attention_probs = tf.nn.softmax(logits=attention_scores, axis=-1)
 
         # This is actually dropping out entire tokens to attend to, which might
         # seem a bit unusual, but is taken from the original Transformer paper.
         attention_probs = self.dropout(inputs=attention_probs, training=training)
-
-        # Mask heads if we want to
-        if head_mask is not None:
-            attention_probs = tf.multiply(attention_probs, head_mask)
 
         attention_output = tf.matmul(attention_probs, value_layer)
         attention_output = tf.transpose(attention_output, perm=[0, 2, 1, 3])
@@ -843,7 +846,12 @@ class TFBertMainLayer(tf.keras.layers.Layer):
         # input head_mask has shape [num_heads] or [num_hidden_layers x num_heads]
         # and head_mask is converted to shape [num_hidden_layers x batch x num_heads x seq_length x seq_length]
         if head_mask is not None:
-            raise NotImplementedError
+            head_mask = tf.repeat(head_mask, repeats=batch_size * seq_length * seq_length)
+            head_mask = tf.reshape(head_mask, [
+                self.config.num_hidden_layers,
+                batch_size, self.config.num_attention_heads,
+                seq_length, seq_length])
+            print(head_mask.numpy())
         else:
             head_mask = [None] * self.config.num_hidden_layers
 
