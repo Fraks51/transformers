@@ -849,8 +849,9 @@ class TFBertMainLayer(tf.keras.layers.Layer):
             head_mask = tf.repeat(head_mask, repeats=batch_size * seq_length * seq_length)
             head_mask = tf.reshape(head_mask, [
                 self.config.num_hidden_layers,
-                batch_size, self.config.num_attention_heads,
+                self.config.num_attention_heads, batch_size,
                 seq_length, seq_length])
+            head_mask = tf.transpose(head_mask, perm=[0, 2, 1, 3, 4])
         else:
             head_mask = [None] * self.config.num_hidden_layers
 
